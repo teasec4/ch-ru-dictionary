@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+
+@theme {
+  /* Ваши кастомные цвета */
+  --color-brand-primary: #aed0ee;
+  --color-brand-secondary: #90cbc4;
+  --color-ui-background: #938f4c;
+  --color-ui-surface: #00a7ac;
+  --color-text-primary: #006658;
+  --color-text-secondary: #789161;
+  --color-text-tertiary: #f5f2e9;
+  
+}

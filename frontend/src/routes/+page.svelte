@@ -43,18 +43,18 @@
     }
 </script>
 
-<div class="w-screen h-screen flex flex-col bg-ui-background">
+<div class="w-screen h-screen flex flex-col">
     <div class="flex gap-3 py-8 flex-col justify-center items-center">
         <input 
             type="text" 
-            placeholder="Введите слово" 
+            placeholder="" 
             bind:value={searchTerm} 
-            class="placeholder:text-gray-400 px-2 py-2 text-2xl max-w-sm w-90 rounded-md border-2 border-gray-900 focus:outline-1 focus:ring-3 focus:ring-blue-500"
+            class="px-2 py-2 text-2xl max-w-sm w-90 rounded-md border border-text-primary focus:outline-1 focus:ring-1 focus:ring-text-primary"
         />
         <button 
             onclick={handleClick} 
             disabled={loading && !error && !searchTerm.trim()}
-            class="px-6 py-2 rounded-md bg-blue-500 text-white font-semibold hover:bg-blue-500 disabled:bg-gray-400"
+            class="px-6 py-2 rounded-md bg-text-primary text-text-tertiary font-semibold disabled:bg-gray-400"
         >
             {#if !loading}Поиск{/if}
         </button>
@@ -71,7 +71,7 @@
         {/if}
        
         {#if !responseData && !loading && !error}
-            <p class="text-gray-600 mt-4">Введите слово для поиска</p>
+            <p class="text-text-primary text-2xl mt-4">Введите слово для поиска</p>
         {/if}
         
         {#if error}
@@ -83,10 +83,5 @@
 
 <style lang="postcss">
     @reference "tailwindcss";
-    
-    :global(html, body) {
-        height: 100%;
-        margin: 0;
-        font-family: 'Inter', sans-serif;
-      }
+
 </style>
