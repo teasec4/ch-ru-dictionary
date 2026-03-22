@@ -1,6 +1,6 @@
 <script lang="ts">
     let searchTerm = $state("");
-    let responseData = $state<Response | null>(null);
+    let responseData = $state<SearchResponse | null>(null);
     let loading = $state(false);
     let error = $state<string | null>(null);
     
@@ -11,8 +11,13 @@
     type Response = {
       chinese: string;
       pinyin: string;
-      pinyin_normalized: string;
       meanings: string[];
+    }
+    
+    type SearchResponse = {
+      data: Response[];
+      count: number;
+      message?: string;
     }
 
     async function handleClick() {
@@ -62,12 +67,16 @@
    
     <div class="flex-1 flex flex-col justify-start items-center p-4">
         {#if responseData}
-            <div class="w-full max-w-md flex flex-col gap-2">
-                <div class="text-2xl font-bold">{responseData.chinese}</div>
-                <div class="text-gray-700 italic">{responseData.pinyin}</div>
-                <div class="text-gray-500">{responseData.pinyin_normalized}</div>
-                <div class="text-gray-800">Значения: {responseData.meanings.join(", ")}</div>
-            </div>
+            {#each responseData.data as word}
+                <div class="w-full max-w-md flex flex-col gap-2">
+                    <div class="text-2xl font-bold">{word.chinese}</div>
+                    <div class="text-gray-700 italic">{word.pinyin}</div>
+                    <div class="text-gray-800">Значения: {word.meanings}</div>
+                </div>
+            {/each}
+            {#if responseData.message === "no results"}
+                <p class="text-2xl text-text-primary mt-4">Нет результатов</p>
+            {/if}
         {/if}
        
         {#if !responseData && !loading && !error}

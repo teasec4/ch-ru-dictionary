@@ -10,6 +10,12 @@ import (
 	"net/http"
 )
 
+type SearchResponse struct {
+	Data    interface{} `json:"data"`
+	Count   int         `json:"count"`
+	Message string      `json:"message,omitempty"`
+}
+
 type ResponseHandler struct {
 	Service *service.DbService
 }
@@ -47,18 +53,31 @@ func (h *ResponseHandler) GetMeaning(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Search request: %q\n", req.Search)
 
 	// Выполняем поиск в базе данных h.Service....
-
-	response := model.Response{
-		Chinese: "你好",
-		Pinyin: "ni2hao3",
-		PinyinNormalized: req.Search,
-		Meanings: []string{"привет" , "здороваться"},
+	// test SearchByHanzi
+	results, err := h.Service.Searh(req.Search)
+	if err != nil{
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	
+	resp := SearchResponse{
+		Data: results,
+		Count: len(results),
+	}
+	
+	// for not found error
+	if len(results) == 0 {
+		resp.Message = "no results"	
+	}
+	
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		fmt.Printf("JSON encode error: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
+
+
+
