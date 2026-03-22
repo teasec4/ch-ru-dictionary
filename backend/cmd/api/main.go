@@ -12,7 +12,7 @@ import (
 
 func main() {
 	// Get the path to the database relative to the project root
-	dbPath := filepath.Join("..", "db", "dictionary.db")
+	dbPath := filepath.Join("..", "db", "dictionary_test_lite.db")
 	db, err := sqlx.Connect("sqlite3", dbPath)
 	if err != nil {
 		panic("Failed to connect to database: " + err.Error())

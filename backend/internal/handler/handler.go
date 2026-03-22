@@ -3,8 +3,10 @@ package handler
 import (
 	"backend/internal/model"
 	"backend/internal/service"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -19,6 +21,10 @@ func NewResponseHandler(s *service.DbService) *ResponseHandler {
 }
 
 func (h *ResponseHandler) GetMeaning(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	fmt.Println("RAW BODY:", string(body))
+	
+	r.Body = io.NopCloser(bytes.NewBuffer(body)) 
 	// Проверяем метод запроса
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -40,22 +46,17 @@ func (h *ResponseHandler) GetMeaning(w http.ResponseWriter, r *http.Request) {
 	// Логируем поисковый запрос
 	fmt.Printf("Search request: %q\n", req.Search)
 
-	// Выполняем поиск в базе данных
-	results, err := h.Service.SearchWords(req.Search)
-	if err != nil {
-		fmt.Printf("Search error: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// Выполняем поиск в базе данных h.Service....
 
-	// Логируем количество найденных результатов
-	fmt.Printf("Found %d results for query: %q\n", len(results), req.Search)
-	if len(results) > 0 {
-		fmt.Printf("First result: %s [%s]\n", results[0].Chinese, results[0].Pinyin)
+	response := model.Response{
+		Chinese: "你好",
+		Pinyin: "ni2hao3",
+		PinyinNormalized: "nihao",
+		Meanings: []string{"привет" , "здороваться"},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(results); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		fmt.Printf("JSON encode error: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

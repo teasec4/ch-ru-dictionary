@@ -8,5 +8,5 @@ type Response struct{
 }
 
 type Request struct{
-	Search string
+	Search string `json:"word"`
 }
