@@ -1,6 +1,8 @@
 <script lang="ts">
     let searchTerm = $state("");
     let responseData = $state<Response | null>(null);
+    let loading = $state(false);
+    let error = $state<string | null>(null);
     
     $effect(() => {
         console.log(responseData);
@@ -15,37 +17,76 @@
 
     async function handleClick() {
       if(searchTerm.trim()){
-        let response = await fetch(`/api/search/${searchTerm}`); 
-        if (response.ok) {
-          let data = await response.json();
-          responseData = data;
-        } else {
-          responseData = null;
+        loading = true;
+        error = null;
+        try {
+          const response = await fetch("/api/search", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ word: searchTerm }),
+          });
+          if (response.ok) {
+            const data = await response.json();
+            searchTerm = "";
+            responseData = data;
+          } else {
+            responseData = null;
+          }
+        } catch (e) {
+          error = e instanceof Error ? e.message : String(e);
+        } finally {
+          loading = false;
         }
       }
     }
 </script>
 
-<h1>Словарь</h1>
-<input type="text" placeholder="Search..." bind:value={searchTerm} />
-<button onclick={handleClick}>поиск</button>
+<div class="w-screen h-screen flex flex-col bg-ui-background">
+    <div class="flex gap-3 py-8 flex-col justify-center items-center">
+        <input 
+            type="text" 
+            placeholder="Введите слово" 
+            bind:value={searchTerm} 
+            class="placeholder:text-gray-400 px-2 py-2 text-2xl max-w-sm w-90 rounded-md border-2 border-gray-900 focus:outline-1 focus:ring-3 focus:ring-blue-500"
+        />
+        <button 
+            onclick={handleClick} 
+            disabled={loading && !error && !searchTerm.trim()}
+            class="px-6 py-2 rounded-md bg-blue-500 text-white font-semibold hover:bg-blue-500 disabled:bg-gray-400"
+        >
+            {#if !loading}Поиск{/if}
+        </button>
+    </div>
+   
+    <div class="flex-1 flex flex-col justify-start items-center p-4">
+        {#if responseData}
+            <div class="w-full max-w-md flex flex-col gap-2">
+                <div class="text-2xl font-bold">{responseData.chinese}</div>
+                <div class="text-gray-700 italic">{responseData.pinyin}</div>
+                <div class="text-gray-500">{responseData.pinyin_normalized}</div>
+                <div class="text-gray-800">Значения: {responseData.meanings.join(", ")}</div>
+            </div>
+        {/if}
+       
+        {#if !responseData && !loading && !error}
+            <p class="text-gray-600 mt-4">Введите слово для поиска</p>
+        {/if}
+        
+        {#if error}
+        <p class="text-red-600 mb-4">Ошибка: {error}</p>
+        {/if}
+    </div>
+    
+</div>
 
-{#if responseData}
-  <div>
-    <span>{responseData.chinese}</span>
-    <span>{responseData.pinyin}</span>
-    <span>{responseData.meanings.join(", ")}</span>
-  </div>
-{/if}
-
-{#if responseData === null}
-  <p>Пусто</p>
-{/if}
-
-<style>
-    div {
-        display: flex;
-        flex-direction: column;
-        align-items: start;
-    }
+<style lang="postcss">
+    @reference "tailwindcss";
+    
+    :global(html, body) {
+        height: 100%;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+      }
 </style>

@@ -51,7 +51,7 @@ func (h *ResponseHandler) GetMeaning(w http.ResponseWriter, r *http.Request) {
 	response := model.Response{
 		Chinese: "你好",
 		Pinyin: "ni2hao3",
-		PinyinNormalized: "nihao",
+		PinyinNormalized: req.Search,
 		Meanings: []string{"привет" , "здороваться"},
 	}
 
