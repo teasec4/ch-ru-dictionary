@@ -11,7 +11,7 @@
     type Response = {
       chinese: string;
       pinyin: string;
-      meanings: string[];
+      meanings: string;
     }
     
     type SearchResponse = {
@@ -54,195 +54,115 @@
     }
 </script>
 
-<div class="min-h-screen bg-bg-primary">
-    <!-- Hero Section -->
-    <div class="relative overflow-hidden">
-        <div class="absolute inset-0 opacity-5 bg-gradient-primary"></div>
-        
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-6 md:py-24">
-            <div class="text-center">
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-6">
-                    Китайский <span class="text-dict-1">словарь</span>
-                </h1>
-                <p class="text-xl md:text-2xl text-dict-2 mb-10 max-w-3xl mx-auto">
-                    Поиск по иероглифам, пиньину и определениям
-                </p>
-                
-                <!-- Поиск -->
-                <div class="max-w-2xl mx-auto">
-                    <div class="relative">
-                        <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
-                            <div class="relative flex-1 w-full sm:w-auto">
-                                <input
-                                    type="text"
-                                    placeholder="Поиск..."
-                                    bind:value={searchTerm}
-                                    onkeydown={handleKeyPress}
-                                    class="w-full px-6 py-4 text-lg rounded-xl border-2 border-dict-3 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 shadow-md transition-all duration-200"
-                                    disabled={loading}
-                                />
-                                {#if searchTerm}
-                                    <button
-                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-dict-2 hover:text-dict-1"
-                                        onclick={() => searchTerm = ""}
-                                    >
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </button>
-                                {/if}
+<div class="min-h-screen px-4 sm:px-6 lg:px-8">
+    <!-- Hero -->
+    <div class="max-w-6xl mx-auto py-10 sm:py-14 md:py-20 text-center">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-4">
+            Китайский <span class="text-dict-1">словарь</span>
+        </h1>
+        <p class="text-base sm:text-lg md:text-xl text-dict-2 mb-8 max-w-2xl mx-auto">
+            Поиск по иероглифам, пиньину и определениям
+        </p>
 
-                            </div>
-                            
-                            <button
-                                onclick={handleClick}
-                                disabled={loading || !searchTerm.trim()}
-                                class="px-8 py-4 rounded-xl bg-primary text-white font-semibold text-lg hover:bg-dict-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2 min-w-[140px] justify-center"
-                            >
-                                {#if loading}
-                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span>Поиск...</span>
-                                {:else}
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                                    </svg>
-                                    <span>Найти</span>
-                                {/if}
-                            </button>
-                            
-                        </div>
-                        
-                        <div class="mt-4 text-sm text-dict-2 flex flex-wrap justify-center gap-3">
-                            <span class="flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-success"></span>
-                                Иероглифы
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-accent"></span>
-                                Пиньин
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-warning"></span>
-                                Перевод
-                            </span>
-                        </div>
+        <!-- Search -->
+        <div class="w-full max-w-2xl mx-auto">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-1">
+                    <input
+                        type="text"
+                        placeholder="Поиск..."
+                        bind:value={searchTerm}
+                        onkeydown={handleKeyPress}
+                        class="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg rounded-xl border border-dict-3 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none shadow-sm transition"
+                        disabled={loading}
+                    />
 
-                        
-                    </div>
+                    {#if searchTerm}
+                        <button
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-dict-2 hover:text-dict-1"
+                            onclick={() => searchTerm = ""}
+                        >✕</button>
+                    {/if}
                 </div>
-                
-                
+
+                <button
+                    onclick={handleClick}
+                    disabled={loading || !searchTerm.trim()}
+                    class="px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-primary text-white font-semibold hover:bg-dict-1 active:scale-95 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                >
+                    {#if loading}
+                        <span class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                        Поиск...
+                    {:else}
+                        Найти
+                    {/if}
+                </button>
             </div>
         </div>
     </div>
-    
-    <!-- Результаты поиска --> 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+    <!-- Results -->
+    <div class="max-w-6xl mx-auto pb-12">
         {#if responseData}
-            <div class="mb-8 fade-in">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl md:text-3xl font-bold text-text-primary">
-                        Найдено: <span class="text-accent">{responseData.count}</span> результатов
-                    </h2>
-                    <button
-                        onclick={() => responseData = null}
-                        class="px-4 py-2 rounded-lg border border-dict-3 text-dict-2 hover:bg-dict-4 hover:text-dict-1 transition-colors"
-                    >
-                        Очистить
-                    </button>
-                </div>
+            <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+                <h2 class="text-xl sm:text-2xl font-bold text-text-primary">
+                    Найдено: <span class="text-accent">{responseData.count}</span>
+                </h2>
+                <button
+                    onclick={() => responseData = null}
+                    class="px-4 py-2 border rounded-lg text-sm text-dict-2 hover:bg-dict-4"
+                >Очистить</button>
+            </div>
 
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {#each responseData.data as word, i}
-                        <div class="dict-card p-6 fade-in" style="animation-delay: {i * 0.1}s">
-                            <div class="flex items-start justify-between mb-4">
-                                <div>
-                                    <div class="chinese-text text-3xl font-bold text-dict-1 mb-1">
-                                        {word.chinese}
-                                    </div>
-                                    <div class="pinyin-text text-lg text-accent font-medium">
-                                        {word.pinyin}
-                                    </div>
+            <div class="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {#each responseData.data as word, i}
+                    <div class="p-4 sm:p-5 rounded-2xl border border-dict-4 shadow-sm bg-white/50">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <div class="text-2xl sm:text-3xl font-bold text-dict-1">
+                                    {word.chinese}
                                 </div>
-                                <div class="text-sm px-3 py-1 rounded-full bg-dict-4 text-dict-2">
-                                    #{i + 1}
+                                <div class="text-sm sm:text-base text-accent">
+                                    {word.pinyin}
                                 </div>
                             </div>
-
-                            <div class="space-y-3">
-                                <div class="text-sm font-semibold text-dict-2 uppercase tracking-wide">
-                                    Значения:
-                                </div>
-                                <div class="space-y-2">
-                                    {#each word.meanings as meaning}
-                                        <p class="text-dict-1">{meaning}</p>
-                                    {/each}
-                                </div>
-                            </div>
-
-                            <div class="mt-6 pt-4 border-t border-dict-4 flex justify-end">
-                                <button
-                                    class="text-sm text-accent hover:text-primary font-medium flex items-center gap-1"
-                                    onclick={() => {/* TODO: Добавить функционал копирования */}}
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                    </svg>
-                                    Копировать
-                                </button>
-                            </div>
+                            <span class="text-xs px-2 py-1 rounded bg-dict-4">#{i+1}</span>
                         </div>
-                    {/each}
-                </div>
 
-                {#if responseData.message === "no results"}
-                    <div class="text-center py-12 fade-in">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-dict-4 mb-4">
-                            <svg class="w-8 h-8 text-dict-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                        <div class="space-y-2">
+                            <div class="text-xs uppercase text-dict-2 tracking-wide">Значения</div>
+
+                            <p class="text-dict-1 meaning-text text-sm sm:text-base leading-relaxed whitespace-normal">
+                                {word.meanings}
+                            </p>
                         </div>
-                        <h3 class="text-xl font-semibold text-dict-1 mb-2">Ничего не найдено</h3>
-                        <p class="text-dict-2 max-w-md mx-auto">
-                            Попробуйте изменить запрос или использовать другой формат поиска
-                        </p>
                     </div>
-                {/if}
-
-                
+                {/each}
             </div>
+
+            {#if responseData.message === "no results"}
+                <div class="text-center py-10">
+                    <p class="text-dict-2">Ничего не найдено</p>
+                </div>
+            {/if}
+
         {:else if loading}
-        <div class="text-center py-16">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-dict-3 border-t-accent mb-4"></div>
-            <p class="text-lg text-dict-2">Ищем в словаре...</p>
-        </div>
-        {:else if error}
-        <div class="max-w-md mx-auto text-center py-12 fade-in">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-error/10 mb-4">
-                <svg class="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+            <div class="text-center py-16">
+                <div class="animate-spin h-10 w-10 border-4 border-dict-3 border-t-accent rounded-full mx-auto mb-4"></div>
+                <p class="text-dict-2">Ищем...</p>
             </div>
-            <h3 class="text-xl font-semibold text-error mb-2">Произошла ошибка</h3>
-            <p class="text-dict-2 mb-6">{error}</p>
-            <button
-                onclick={() => error = null}
-                class="px-6 py-2 rounded-lg bg-primary text-white hover:bg-dict-1 transition-colors"
-            >
-                Попробовать снова
-            </button>
-        </div>
 
+        {:else if error}
+            <div class="text-center py-12">
+                <p class="text-error mb-4">{error}</p>
+                <button onclick={() => error = null} class="px-4 py-2 bg-primary text-white rounded">
+                    Повторить
+                </button>
+            </div>
         {/if}
-   </div>
-    
-    
+    </div>
 </div>
 
 <style lang="postcss">
-    @reference "tailwindcss";
-
+@reference "tailwindcss";
 </style>

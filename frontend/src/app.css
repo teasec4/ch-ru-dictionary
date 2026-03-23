@@ -42,7 +42,7 @@
 
 /* Глобальные стили */
 :root {
-    background-color: var(--color-bg-primary);
+   
     color: var(--color-text-primary);
     font-family:
         system-ui,
@@ -54,6 +54,13 @@
         Arial,
         sans-serif;
 }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overscroll-behavior: none; /* чтобы scroll не дергал */
+}
+
 
 /* Плавные переходы для интерактивных элементов */
 * {
@@ -73,6 +80,12 @@
     font-family: "Arial", sans-serif;
     font-style: italic;
     letter-spacing: 0.05em;
+}
+
+.meaning-text {
+    word-break: normal;
+    overflow-wrap: break-word;
+    line-height: 1.6;
 }
 
 /* Анимации */
