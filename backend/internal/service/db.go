@@ -39,6 +39,8 @@ func (s *DbService) SearchByHanzi(query string) ([]Result, error){
 			JOIN meanings m ON w.id = m.word_id
 			WHERE w.hanzi LIKE ?
 			GROUP BY w.id
+			ORDER BY
+				LENGTH(w.hanzi)
 			LIMIT 20;
 		`, query+"%")
 	
@@ -68,6 +70,8 @@ func (s *DbService) SearchByPinyin(query string) ([]Result, error) {
 		JOIN meanings m ON w.id = m.word_id
 		WHERE w.pinyin LIKE ?
 		GROUP BY w.id
+		ORDER BY
+			LENGTH(w.hanzi)
 		LIMIT 20;
 	`, query+"%")
 	if err != nil {
@@ -115,22 +119,5 @@ func (s *DbService)SearchByMeaning(query string) ([]Result, error) {
 	return results, nil
 }
 
-// helpers
-func containsHanzi(s string) bool {
-	for _, r := range s {
-		if r >= 0x4E00 && r <= 0x9FFF {
-			return true
-		}
-	}
-	return false
-}
 
-func isLatin(s string) bool {
-	for _, r := range s {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
-			return true
-		}
-	}
-	return false
-}
 

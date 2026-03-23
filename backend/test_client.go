@@ -1,7 +1,7 @@
 package main
 
 import (
-	"backend/internal/model"
+	"backend/internal/handler"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -24,7 +24,7 @@ func main() {
 	for _, searchTerm := range testCases {
 		fmt.Printf("\n=== Testing search for: %s ===\n", searchTerm)
 
-		reqBody := model.Request{Search: searchTerm}
+		reqBody := handler.Request{Search: searchTerm}
 		jsonData, err := json.Marshal(reqBody)
 		if err != nil {
 			fmt.Printf("Error marshaling request: %v\n", err)

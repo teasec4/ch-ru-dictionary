@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"backend/internal/model"
 	"backend/internal/service"
 	"bytes"
 	"encoding/json"
@@ -14,6 +13,10 @@ type SearchResponse struct {
 	Data    interface{} `json:"data"`
 	Count   int         `json:"count"`
 	Message string      `json:"message,omitempty"`
+}
+
+type Request struct{
+	Search string `json:"word"`
 }
 
 type ResponseHandler struct {
@@ -37,7 +40,7 @@ func (h *ResponseHandler) GetMeaning(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req model.Request
+	var req Request
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
