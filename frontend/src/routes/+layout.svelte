@@ -37,7 +37,7 @@
 				<a href="/" onclick={(e) => {
                 e.preventDefault();
                 goto("/");
-  }} class="flex items-center gap-2 sm:gap-3">
+				 }} class="flex items-center gap-2 sm:gap-3">
 					<div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center">
 						<span class=" font-bold">字</span>
 					</div>
