@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto } from "$app/navigation";
 	let { children } = $props();
 	import "../app.css";
 	
@@ -28,14 +29,17 @@
 </svelte:head>
 
 <div class="min-h-screen flex flex-col">
-	<!-- NAVBAR -->
-	<nav class="sticky top-0 z-50 w-full bg-white border-b border-dict-4">
+        <!-- NAVBAR -->
+	<nav class="sticky top-0 z-50 w-full bg-white">
 		<div class="max-w-6xl mx-auto px-4 sm:px-6">
-			<div class="flex justify-between items-center h-14 sm:h-16">
+			<div class="flex justify-between items-center h-14">
 				<!-- Logo -->
-				<a href="/" class="flex items-center gap-2 sm:gap-3">
-					<div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-						<span class="text-white font-bold">字</span>
+				<a href="/" onclick={(e) => {
+                e.preventDefault();
+                goto("/");
+  }} class="flex items-center gap-2 sm:gap-3">
+					<div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center">
+						<span class=" font-bold">字</span>
 					</div>
 					<div class="text-xs sm:text-sm text-dict-2 leading-tight">
 						汉俄词典
@@ -73,93 +77,13 @@
 
 	</nav>
 	
-	<!-- Overlay -->
-	{#if menuOpen}
-		<!-- Overlay -->
-		<div
-			class="fixed inset-0 bg-black/30 z-40 md:hidden"
-			onclick={closeMenu}
-		/>
-
-		<!-- Drawer -->
-		<div
-			class="fixed top-0 right-0 h-full w-4/5 max-w-sm bg-white z-50 shadow-xl
-			       transform transition-transform duration-300
-		        {menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}"
-		>
-			<div class="px-4 py-4 space-y-2">
-				{#each links as link}
-					<a
-						href={link.href}
-						class="block px-4 py-3 rounded-lg text-dict-2 hover:text-primary hover:bg-dict-4 transition"
-						onclick={closeMenu}
-					>
-						{link.text}
-					</a>
-				{/each}
-
-				<div class="pt-4 mt-4 border-t border-dict-4 text-xs text-dict-2 px-4">
-					Версия 1.0.0
-				</div>
-			</div>
-		</div>
-		{/if}
-
 	
-	<main class="flex-1 w-full bg-linear-to-b from-primary-500 via-secondary-20 to-dict-4">
+	<main class="flex flex-1 justify-center items-center flex-col">
 		{@render children()}
 	</main>
+	
 
-	<!-- FOOTER -->
-	<footer class="bg-white border-t border-dict-4 mt-10">
-		<div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-			<div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-				<!-- Brand -->
-				<div>
-					<div class="flex items-center gap-3 mb-3">
-						<div class="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-							<span class="text-white text-sm font-bold">字</span>
-						</div>
-						<div>
-							<div class="font-semibold text-text-primary text-sm">
-								Китайский словарь
-							</div>
-							<div class="text-xs text-dict-2">汉俄词典</div>
-						</div>
-					</div>
-					<p class="text-xs sm:text-sm text-dict-2">
-						Современный китайско-русский словарь с удобным поиском.
-					</p>
-				</div>
-
-				<!-- Nav -->
-				<div>
-					<h3 class="font-medium text-dict-1 mb-3 text-sm">Навигация</h3>
-					<div class="space-y-1">
-						{#each links as link}
-							<a href={link.href} class="block text-sm text-dict-2 hover:text-primary">
-								{link.text}
-							</a>
-						{/each}
-					</div>
-				</div>
-
-				<!-- Support -->
-				<div>
-					<h3 class="font-medium text-dict-1 mb-3 text-sm">Поддержка</h3>
-					<div class="space-y-1">
-						<a href="#" class="block text-sm text-dict-2 hover:text-primary">Помощь</a>
-						<a href="#" class="block text-sm text-dict-2 hover:text-primary">Обратная связь</a>
-						<a href="#" class="block text-sm text-dict-2 hover:text-primary">Конфиденциальность</a>
-					</div>
-				</div>
-			</div>
-
-			<div class="mt-6 pt-6 border-t border-dict-4 text-center text-xs sm:text-sm text-dict-2">
-				© 2026 Китайский словарь
-			</div>
-		</div>
-	</footer>
+	
 </div>
 
 <style lang="postcss">
