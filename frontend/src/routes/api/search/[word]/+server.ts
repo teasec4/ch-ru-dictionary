@@ -1,7 +1,7 @@
-import type { RequestHandler } from "./$types";
+import type { RequestHandler } from "../$types";
 
-export const POST: RequestHandler = async ({ request }) => {
-  const { word } = await request.json();
+export const GET: RequestHandler = async ({ params }) => {
+  const { word }  = params;
 
   const res = await fetch("http://localhost:8080/", {
     method: "POST",

@@ -10,8 +10,9 @@
     }
 
     async function handleClick() {
+       console.log('handleClick called, searchTerm:', searchTerm);
       if(searchTerm.trim()){
-        goto(`/search?q=${searchTerm}`);
+        goto(`/search/${searchTerm}`);
         return;
       }    
     }
@@ -44,7 +45,7 @@
                     <button
                         class="absolute right-3 top-1/2 -translate-y-1/2  px-6 sm:px-8rounded-xl bg-primary hover:bg-dict-1 text-white font-semibold rounded-xl py-2 active:scale-95 disabled:opacity-50 transition"
                         onclick={handleClick}
-                        disabled={!searchTerm.trim()}
+                        
                     >Поиск
                     </button>
                 </div>
