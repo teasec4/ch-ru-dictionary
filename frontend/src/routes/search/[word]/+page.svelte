@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
+    import { LoaderCircleIcon } from 'lucide-svelte';
 
     let {data} = $props();
     
@@ -8,9 +9,19 @@
     let error = $state<string | null>(null);
 
     async function handleSearch() {
-      if(searchTerm.trim()){
-        goto(`/search/${searchTerm}`)
-      }
+      if (!searchTerm.trim()) return;
+              
+        loading = true;
+        error = null;
+        
+        try {
+            goto(`/search/${encodeURIComponent(searchTerm.trim())}`);
+        } catch (err) {
+            error = err instanceof Error ? err.message : 'Произошла ошибка';
+            console.error('Navigation error:', err);
+        } finally {
+            loading = false;
+        }
     }
     
     function handleKeyPress(event: KeyboardEvent){
@@ -21,22 +32,54 @@
 
 </script>
 
-<div class="min-h-screen flex flex-col gap-10">
+<div class="min-h-screen w-full flex flex-col">
 
 	<!-- SEARCH BAR -->
-	<div class="sticky top-14 bg-white z-40  px-4 py-3">
-		<div class="max-w-2xl mx-auto flex gap-2">
-		<input
-                        type="text"
-                        placeholder="Поиск..."
-                        bind:value={searchTerm}
-                        onkeydown={handleKeyPress}
-                        class="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg rounded-xl border border-dict-3 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none shadow-sm transition"
-                        disabled={loading}
-                    />
-			<button class="px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-primary text-white font-semibold hover:bg-dict-1 active:scale-95 disabled:opacity-50 transition flex items-center justify-center gap-2" onclick={handleSearch}>Найти</button>
-		</div>
+	<div class="sticky top-14 bg-white z-40  px-4 py-3 shrink-0">
+    	<div class="max-w-2xl mx-auto flex gap-2">
+       	
+         <div class="relative flex-1">
+      		<input
+                type="text"
+                placeholder="Поиск..."
+                bind:value={searchTerm}
+                onkeydown={handleKeyPress}
+                class="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg rounded-xl border border-dict-3 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none shadow-sm transition"
+                disabled={loading}
+            />
+            {#if searchTerm.trim()}
+                <button class="absolute right-5 top-1/2 -translate-y-1/2 text-dict-2" onclick={() => searchTerm = ''}>
+              		x
+            </button>
+            {/if}
+      		
+       	</div>
+       	<button 
+ 			disabled={!searchTerm.trim()}
+ 			class="px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-primary text-white font-semibold hover:bg-dict-1 active:scale-95 disabled:opacity-50 transition flex items-center justify-center gap-2" onclick={handleSearch}>
+ 			Найти
+       	</button>
+        </div>
+		
 	</div>
+	
+    <!-- Индикатор загрузки под поиском -->
+    {#if loading}
+        <div class="max-w-2xl mx-auto mt-3">
+            <div class="flex items-center gap-2 text-sm text-dict-2">
+                <LoaderCircleIcon class="w-4 h-4 animate-spin" />
+                <span>Ищем "{searchTerm}"...</span>
+            </div>
+        </div>
+    {/if}
+    
+    {#if error}
+        <div class="max-w-2xl mx-auto mt-3">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p class="text-red-600 text-sm">Ошибка: {error}</p>
+            </div>
+        </div>
+    {/if}
 	
 
 	<!-- Results -->
@@ -101,6 +144,16 @@
 
 <style lang="postcss">
     @reference "tailwindcss";
+    
+    /* Анимация для спиннера */
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
     
     
 </style>
