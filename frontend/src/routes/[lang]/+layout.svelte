@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-	let { children } = $props();
-	import "../app.css";
+	let { children, data } = $props();
+	import "../../app.css";
 	
 	let menuOpen = $state(false);
 	
@@ -9,10 +9,15 @@
 		menuOpen = !menuOpen;
 	};
 	
+
+    const lang = data.lang;
+    const translations = data.translations;
+    console.log(lang)
+	
 	const closeMenu = () => (menuOpen = false);
 	
 	const links = [
-		{ href: "/", text: "Словарь" },
+		{ href: "/", text: translations.title },
 		{ href: "/about", text: "Новости" },
 		{ href: "/contact", text: "Контакты" },
 	];

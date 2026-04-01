@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import { page } from "$app/state";
     import { Search, Bookmark, Sparkles } from "lucide-svelte";
     let searchTerm = $state("");
   
@@ -10,9 +11,10 @@
     }
 
     async function handleSearch() {
+      const lang = page.params.lang;
        console.log('handleClick called, searchTerm:', searchTerm);
       if(searchTerm.trim()){
-        goto(`/search/${searchTerm}`);
+        goto(`/${lang}/search/${searchTerm}`);
         return;
       }    
     }
