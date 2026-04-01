@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import LanguageToggle from "$lib/components/LanguageToggle.svelte";
     let { children, data } = $props();
     import "../../app.css";
 
@@ -61,38 +62,49 @@
                             {link.text}
                         </a>
                     {/each}
+
+                    <!-- Language toggle for desktop -->
+                    <div class="ml-2">
+                        <LanguageToggle />
+                    </div>
                 </div>
 
-                <!-- Mobile button -->
-                <button
-                    class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-dict-4 transition"
-                    onclick={toggleMenu}
-                    aria-label={menuOpen
-                        ? translations.closeMenu
-                        : translations.openMenu}
-                >
-                    <svg
-                        class="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
+                <!-- Right section for mobile -->
+                <div class="flex items-center gap-2 md:hidden">
+                    <!-- Language toggle for mobile -->
+                    <LanguageToggle />
+
+                    <!-- Mobile menu button -->
+                    <button
+                        class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-dict-4 transition"
+                        onclick={toggleMenu}
+                        aria-label={menuOpen
+                            ? translations.closeMenu
+                            : translations.openMenu}
                     >
-                        {#if !menuOpen}
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M4 6h16M4 12h16M4 18h16"
-                            />
-                        {:else}
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        {/if}
-                    </svg>
-                </button>
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                        >
+                            {#if !menuOpen}
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
+                            {:else}
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            {/if}
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
