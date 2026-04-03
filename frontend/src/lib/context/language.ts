@@ -57,6 +57,8 @@ export const Language = {
     // Кнопки
     find: "Найти",
     retry: "Повторить",
+    showMore: "Показать где встречается",
+    whereAppears: "Где встречается",
 
     // Статусы
     loadingIndicator: "Ищем",
@@ -125,6 +127,8 @@ export const Language = {
     // Кнопки
     find: "查找",
     retry: "重试",
+    showMore: "显示包含该词的条目",
+    whereAppears: "出现在",
 
     // Статусы
     loadingIndicator: "正在搜索",

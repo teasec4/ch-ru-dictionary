@@ -33,9 +33,9 @@ func New(db *sqlx.DB) *Searcher {
 	return &Searcher{db: db}
 }
 
-func (s *Searcher) Search(hanzi, pinyin, meaning string, page, limit int) (Result, error) {
+func (s *Searcher) Search(hanzi, pinyin, meaning string, page, limit int, extended bool) (Result, error) {
 	if hanzi != "" {
-		entries := s.ByHanzi(hanzi, limit)
+		entries := s.ByHanzi(hanzi, limit, extended)
 		return Result{Data: entries, Total: len(entries), Page: page, Limit: limit}, nil
 	}
 	if pinyin != "" {
@@ -49,24 +49,34 @@ func (s *Searcher) Search(hanzi, pinyin, meaning string, page, limit int) (Resul
 	return Result{Data: []Entry{}, Total: 0, Page: page, Limit: limit}, nil
 }
 
-func (s *Searcher) ByHanzi(hanzi string, limit int) []Entry {
-	var exact, prefix, contains []Entry
+func (s *Searcher) ByHanzi(hanzi string, limit int, extended bool) []Entry {
+	// Всегда точное совпадение
+	exact := s.byHanziExact(hanzi, limit)
 
-	exact = s.byHanziExact(hanzi, 5)
-	if len(exact) >= limit {
-		return exact[:limit]
+	if !extended {
+		return exact
 	}
 
-	remaining := limit - len(exact)
-	prefix = s.byHanziPrefix(hanzi, remaining)
-	if len(prefix) >= remaining {
-		return append(exact, prefix[:remaining]...)
+	// Extended: добавляем prefix если есть место
+	if len(exact) < limit {
+		remaining := limit - len(exact)
+		prefix := s.byHanziPrefix(hanzi, remaining)
+
+		// Убираем дубликаты
+		existing := make(map[string]bool)
+		for _, e := range exact {
+			existing[e.Hanzi] = true
+		}
+
+		for _, p := range prefix {
+			if !existing[p.Hanzi] && len(exact) < limit {
+				exact = append(exact, p)
+				existing[p.Hanzi] = true
+			}
+		}
 	}
 
-	remaining = remaining - len(prefix)
-	contains = s.byHanziContains(hanzi, remaining)
-
-	return append(exact, append(prefix, contains...)...)
+	return exact
 }
 
 func (s *Searcher) byHanziExact(hanzi string, limit int) []Entry {

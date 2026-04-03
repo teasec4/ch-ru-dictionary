@@ -1,8 +1,9 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
-    import { Search, Bookmark, Sparkles } from "lucide-svelte";
+    import { Search, Bookmark, Sparkles, Loader2 } from "lucide-svelte";
     let searchTerm = $state("");
+    let loading = $state(false);
 
     let { data } = $props();
     const translations = data.translations;
@@ -14,11 +15,15 @@
     }
 
     async function handleSearch() {
+        if (!searchTerm.trim() || loading) return;
+        
         const lang = page.params.lang;
-        console.log("handleClick called, searchTerm:", searchTerm);
-        if (searchTerm.trim()) {
-            goto(`/${lang}/search/${searchTerm}`);
-            return;
+        loading = true;
+        
+        try {
+            await goto(`/${lang}/search/${searchTerm}`);
+        } finally {
+            loading = false;
         }
     }
 </script>
@@ -48,13 +53,19 @@
                         bind:value={searchTerm}
                         onkeydown={handleKeyPress}
                         class="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg rounded-xl border border-dict-3 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none shadow-sm transition"
+                        disabled={loading}
                     />
 
                     <button
-                        class="absolute right-3 top-1/2 -translate-y-1/2 px-6 sm:px-8rounded-xl bg-primary hover:bg-dict-1 text-white font-semibold rounded-xl py-2 active:scale-95 disabled:opacity-50 transition"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 px-6 sm:px-8 rounded-xl bg-primary hover:bg-dict-1 text-white font-semibold py-2 active:scale-95 disabled:opacity-50 transition flex items-center gap-2"
                         onclick={handleSearch}
-                        disabled={!searchTerm.trim()}
-                        >{translations.searchButton}
+                        disabled={!searchTerm.trim() || loading}
+                    >
+                        {#if loading}
+                            <Loader2 class="w-5 h-5 animate-spin" />
+                        {:else}
+                            {translations.searchButton}
+                        {/if}
                     </button>
                 </div>
             </div>
@@ -89,4 +100,12 @@
 
 <style lang="postcss">
     @reference "tailwindcss";
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
 </style>
