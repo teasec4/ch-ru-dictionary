@@ -27,6 +27,11 @@
             loading = false;
         }
     }
+
+    function formatMeanings(item: any): string {
+        if (!item.meanings || !Array.isArray(item.meanings)) return '';
+        return item.meanings.map((m: any) => `${m.index}) ${m.text}`).join('; ');
+    }
 </script>
 
 {#if !clicked}
@@ -34,6 +39,7 @@
         <button 
             onclick={loadExtended}
             class="px-6 py-2 bg-dict-4 text-dict-1 rounded-lg hover:bg-dict-3 transition"
+            aria-label={translations?.showMore || "Показать где встречается"}
         >
             {translations?.showMore || "Показать где встречается"}
         </button>
@@ -45,20 +51,20 @@
         </h3>
         <div class="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {#each results as item, i}
-                <div class="p-3 sm:p-4 rounded-xl border border-dict-4 shadow-sm bg-white/30">
+                <div class="p-3 sm:p-4 rounded-xl border border-dict-4 shadow-sm bg-white">
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="text-xl sm:text-2xl font-bold text-dict-1">
-                                {item.chinese}
+                                {item.hanzi}
                             </div>
                             <div class="text-sm text-accent">
-                                {item.pinyin}
+                                {item.pinyin || ''}
                             </div>
                         </div>
                     </div>
                     {#if item.meanings}
                         <p class="text-xs sm:text-sm text-dict-2 mt-2 line-clamp-2">
-                            {item.meanings}
+                            {formatMeanings(item)}
                         </p>
                     {/if}
                 </div>

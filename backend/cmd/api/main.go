@@ -30,7 +30,6 @@ func main() {
 	r := gin.Default()
 
 	r.GET("/api/entries", h.SearchEntries)
-	r.GET("/api/autocomplete", h.Autocomplete)
 
 	port := ":8080"
 	fmt.Println("Server starting on port", port)

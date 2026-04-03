@@ -43,7 +43,7 @@
 
 <div class="min-h-screen w-full flex flex-col">
     <!-- SEARCH BAR -->
-    <div class="sticky top-14 bg-white z-40 px-4 py-3 shrink-0">
+    <div class="sticky top-12 bg-white z-40 px-4 py-3 shrink-0">
         <div class="max-w-2xl mx-auto flex gap-2">
             <div class="relative flex-1">
                 <input
@@ -56,10 +56,11 @@
                 />
                 {#if searchTerm.trim()}
                     <button
-                        class="absolute right-5 top-1/2 -translate-y-1/2 text-dict-2"
+                        class="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-dict-2 hover:text-dict-1 text-sm"
                         onclick={() => (searchTerm = "")}
+                        aria-label={translations.clearSearch || "Очистить"}
                     >
-                        x
+                        ×
                     </button>
                 {/if}
             </div>
@@ -90,15 +91,8 @@
     {/if}
 
     <!-- Results -->
-    <div class="max-w-6xl mx-auto pb-12 p-4">
+    <div class="max-w-6xl mx-auto pb-12 p-4 pt-20">
         {#if !pageLoading && data}
-            <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
-                <h2 class="text-xl sm:text-2xl font-bold text-text-primary">
-                    {translations.found}:
-                    <span class="text-accent">{data.data.count}</span>
-                    {translations.results}
-                </h2>
-            </div>
 
             {#if data.data.count > 0}
                 <div class="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -111,7 +105,7 @@
                                     <div
                                         class="text-2xl sm:text-3xl font-bold text-dict-1"
                                     >
-                                        {word.chinese}
+                                        {word.hanzi}
                                     </div>
                                     <div class="text-sm sm:text-base text-accent">
                                         {word.pinyin}
@@ -132,7 +126,31 @@
                                 <p
                                     class="text-dict-1 meaning-text text-sm sm:text-base leading-relaxed whitespace-normal"
                                 >
-                                    {word.meanings}
+                                    {#each word.meanings as meaning}
+                                        <span class="meaning-line">
+                                            <span class="meaning-index"
+                                                >{meaning.index})</span
+                                            >
+                                            {meaning.text}
+                                            {#if meaning.refs && meaning.refs.length > 0}
+                                                <span class="refs-list ml-1">
+                                                    (
+                                                    {#each meaning.refs as ref, ri}
+                                                        <a
+                                                            href="/{page.params.lang}/search/{ref}"
+                                                            class="text-accent hover:underline font-medium ref-link"
+                                                            >{ref}</a
+                                                        >{ri <
+                                                            meaning.refs.length -
+                                                                1
+                                                            ? ", "
+                                                            : ""}
+                                                    {/each}
+                                                    )
+                                                </span>
+                                            {/if}
+                                        </span>
+                                    {/each}
                                 </p>
                             </div>
                         </div>

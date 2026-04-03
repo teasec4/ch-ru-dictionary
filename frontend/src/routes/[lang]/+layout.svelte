@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import { page } from "$app/state";
     import LanguageToggle from "$lib/components/LanguageToggle.svelte";
     let { children, data } = $props();
     import "../../app.css";
@@ -17,10 +18,17 @@
     const closeMenu = () => (menuOpen = false);
 
     const links = [
-        { href: "/", text: translations.title },
-        { href: "/about", text: translations.about },
-        { href: "/contact", text: translations.contact },
+        { href: `/${lang}`, text: translations.home },
+        { href: `/${lang}/about`, text: translations.about },
+        { href: `/${lang}/contact`, text: translations.contact },
+        { href: `/${lang}/social`, text: translations.socialTitle || "Мы в соцсетях" },
+        { href: `/${lang}/privacy`, text: translations.privacyTitle || "Права" },
     ];
+
+    const isHomePage = page.url.pathname === `/${lang}` || page.url.pathname === `/${lang}/`;
+    const containerClass = isHomePage 
+        ? "h-[100dvh] flex flex-col overflow-hidden" 
+        : "min-h-[100dvh] flex flex-col";
 </script>
 
 <svelte:head>
@@ -28,9 +36,9 @@
     <meta name="description" content={translations.metaDescription} />
 </svelte:head>
 
-<div class="min-h-screen flex flex-col">
+<div class={containerClass} onclick={() => menuOpen && closeMenu()}>
     <!-- NAVBAR -->
-    <nav class="sticky top-0 z-50 w-full bg-white">
+    <nav class="sticky top-0 z-50 w-full bg-white h-12">
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
             <div class="flex justify-between items-center h-14">
                 <!-- Logo -->
@@ -70,14 +78,14 @@
                 </div>
 
                 <!-- Right section for mobile -->
-                <div class="flex items-center gap-2 md:hidden">
+                <div class="flex items-center gap-2 md:hidden relative">
                     <!-- Language toggle for mobile -->
                     <LanguageToggle />
 
                     <!-- Mobile menu button -->
                     <button
                         class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-dict-4 transition"
-                        onclick={toggleMenu}
+                        onclick={(e) => { e.stopPropagation(); toggleMenu(); }}
                         aria-label={menuOpen
                             ? translations.closeMenu
                             : translations.openMenu}
@@ -104,12 +112,27 @@
                             {/if}
                         </svg>
                     </button>
+
+                    <!-- Mobile dropdown menu -->
+                    {#if menuOpen}
+                        <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl border border-dict-4 shadow-lg py-1 z-50">
+                            {#each links as link}
+                                <a
+                                    href={link.href}
+                                    onclick={closeMenu}
+                                    class="block px-4 py-2 text-sm text-dict-2 hover:text-primary hover:bg-dict-4/30"
+                                >
+                                    {link.text}
+                                </a>
+                            {/each}
+                        </div>
+                    {/if}
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="flex flex-1 justify-center items-center flex-col">
+    <main class="flex-1 flex flex-col items-center justify-center w-full px-4 min-h-0">
         {@render children()}
     </main>
 </div>

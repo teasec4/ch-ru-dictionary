@@ -57,9 +57,13 @@ export const GET: RequestHandler = async ({ params, url }) => {
 
     const response = {
       data: (data.data || []).map((entry: any) => ({
-        chinese: entry.hanzi,
+        hanzi: entry.hanzi,
         pinyin: entry.pinyin || '',
-        meanings: (entry.meanings || []).map((m: any) => `${m.index}) ${m.text}`).join('; ')
+        meanings: (entry.meanings || []).map((m: any) => ({
+          index: m.index,
+          text: m.text,
+          refs: m.refs || []
+        }))
       })),
       total: data.total || 0,
       count: data.total || 0,

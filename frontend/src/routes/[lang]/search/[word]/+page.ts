@@ -1,7 +1,13 @@
+type Meaning = {
+  index: number;
+  text: string;
+  refs?: string[];
+}
+
 type Response = {
-  chinese: string;
+  hanzi: string;
   pinyin: string;
-  meanings: string;
+  meanings: Meaning[];
 }
 
 type SearchResponse = {

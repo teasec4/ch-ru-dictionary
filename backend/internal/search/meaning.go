@@ -22,33 +22,3 @@ func (s *Searcher) ByMeaning(meaning string, page, limit int) ([]Entry, int) {
 	return scanEntries(s.db, rows), total
 }
 
-func (s *Searcher) Autocomplete(prefix string, limit int) ([]Entry, error) {
-	if limit <= 0 {
-		limit = 10
-	}
-	if limit > 50 {
-		limit = 50
-	}
-
-	rows, err := s.db.Queryx(`
-		SELECT id, hanzi, pinyin FROM entries 
-		WHERE hanzi LIKE ? 
-		ORDER BY LENGTH(hanzi)
-		LIMIT ?`,
-		prefix+"%", limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var entries []Entry
-	for rows.Next() {
-		var e Entry
-		if err := rows.Scan(&e.Hanzi, &e.Pinyin); err != nil {
-			return nil, err
-		}
-		entries = append(entries, e)
-	}
-
-	return entries, nil
-}

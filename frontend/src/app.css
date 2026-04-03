@@ -58,12 +58,19 @@
 html, body {
   margin: 0;
   height: 100%;
-  overscroll-behavior: none; /* чтобы scroll не дергал */
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+@supports (height: 100dvh) {
+  html, body {
+    height: 100dvh;
+  }
 }
 
 
 /* Плавные переходы для интерактивных элементов */
-* {
+a, button, input, select, textarea {
     transition:
         background-color 0.2s ease,
         border-color 0.2s ease,

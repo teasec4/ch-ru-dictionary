@@ -76,15 +76,4 @@ func detectSearchType(word string) (hanzi, pinyin, meaning string) {
 	return word, "", ""
 }
 
-func (h *Handler) Autocomplete(c *gin.Context) {
-	prefix := c.Query("prefix")
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
-	entries, err := h.svc.Autocomplete(prefix, limit)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": entries})
-}
