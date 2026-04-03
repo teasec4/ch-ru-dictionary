@@ -1,4 +1,3 @@
-
 type Response = {
   chinese: string;
   pinyin: string;
@@ -13,9 +12,8 @@ type SearchResponse = {
 
 export const load = async ({ fetch, params }) => {
   const response = await fetch(`/api/search/${params.word}`);
-  const data :SearchResponse = await response.json();
+  const data: SearchResponse = await response.json();
   return {
     data
   }
 };
-

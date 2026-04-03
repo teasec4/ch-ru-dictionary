@@ -1,6 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { LoaderCircleIcon } from "lucide-svelte";
+    import { page } from "$app/state";
 
     let { data } = $props();
     const translations = data.translations;
@@ -10,13 +11,14 @@
     let error = $state<string | null>(null);
 
     async function handleSearch() {
+        const lang = page.params.lang;
         if (!searchTerm.trim()) return;
 
         loading = true;
         error = null;
 
         try {
-            goto(`/search/${encodeURIComponent(searchTerm.trim())}`);
+            goto(`/${lang}/search/${encodeURIComponent(searchTerm.trim())}`);
         } catch (err) {
             error = err instanceof Error ? err.message : translations.error;
             console.error("Navigation error:", err);
