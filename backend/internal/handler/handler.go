@@ -1,86 +1,50 @@
 package handler
 
 import (
-	"backend/internal/service"
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
+	"strconv"
+
+	"backend/internal/search"
+
+	"github.com/gin-gonic/gin"
 )
 
-type SearchResponse struct {
-	Data    interface{} `json:"data"`
-	Count   int         `json:"count"`
-	Message string      `json:"message,omitempty"`
+type Handler struct {
+	svc *search.Searcher
 }
 
-type Request struct{
-	Search string `json:"word"`
+func NewHandler(svc *search.Searcher) *Handler {
+	return &Handler{svc: svc}
 }
 
-type ResponseHandler struct {
-	Service *service.DbService
-}
+func (h *Handler) SearchEntries(c *gin.Context) {
+	hanzi := c.Query("hanzi")
+	pinyin := c.Query("pinyin")
+	meaning := c.Query("q")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 
-func NewResponseHandler(s *service.DbService) *ResponseHandler {
-	return &ResponseHandler{
-		Service: s,
+	if page < 1 {
+		page = 1
 	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	result, _ := h.svc.Search(hanzi, pinyin, meaning, page, limit)
+
+	c.JSON(http.StatusOK, result)
 }
 
-func (h *ResponseHandler) GetMeaning(w http.ResponseWriter, r *http.Request) {
-	body, _ := io.ReadAll(r.Body)
-	fmt.Println("RAW BODY:", string(body))
-	
-	r.Body = io.NopCloser(bytes.NewBuffer(body)) 
-	// Проверяем метод запроса
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+func (h *Handler) Autocomplete(c *gin.Context) {
+	prefix := c.Query("prefix")
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	entries, err := h.svc.Autocomplete(prefix, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	var req Request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Проверяем, что поисковый запрос не пустой
-	if req.Search == "" {
-		http.Error(w, "Search query is required", http.StatusBadRequest)
-		return
-	}
-
-	// Логируем поисковый запрос
-	fmt.Printf("Search request: %q\n", req.Search)
-
-	// Выполняем поиск в базе данных h.Service....
-	// test SearchByHanzi
-	results, err := h.Service.Searh(req.Search)
-	if err != nil{
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	
-	resp := SearchResponse{
-		Data: results,
-		Count: len(results),
-	}
-	
-	// for not found error
-	if len(results) == 0 {
-		resp.Message = "no results"	
-	}
-	
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		fmt.Printf("JSON encode error: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	c.JSON(http.StatusOK, gin.H{"data": entries})
 }
-
-
-

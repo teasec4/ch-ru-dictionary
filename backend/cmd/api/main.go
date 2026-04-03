@@ -2,31 +2,39 @@ package main
 
 import (
 	"backend/internal/handler"
+	"backend/internal/search"
 	"backend/internal/service"
-	"net/http"
-	"path/filepath"
+	"fmt"
+	"log"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	// Get the path to the database relative to the project root
-	dbPath := filepath.Join("..", "db", "dictionary_test_lite.db")
-	db, err := sqlx.Connect("sqlite3", dbPath)
+	db, err := sqlx.Connect("sqlite3", "dictionary.db")
 	if err != nil {
 		panic("Failed to connect to database: " + err.Error())
 	}
 	defer db.Close()
 
-	sDB := service.NewDbService(db)
-	h := handler.NewResponseHandler(sDB)
+	svcDB := service.NewDB(db)
+	if err := svcDB.InitFTS(); err != nil {
+		log.Printf("FTS init warning: %v", err)
+	}
 
-	http.HandleFunc("/", h.GetMeaning)
+	svc := search.New(db)
+	h := handler.NewHandler(svc)
+
+	r := gin.Default()
+
+	r.GET("/api/entries", h.SearchEntries)
+	r.GET("/api/autocomplete", h.Autocomplete)
 
 	port := ":8080"
-	println("Server starting on port", port)
-	if err := http.ListenAndServe(port, nil); err != nil {
+	fmt.Println("Server starting on port", port)
+	if err := r.Run(port); err != nil {
 		panic(err)
 	}
 }
