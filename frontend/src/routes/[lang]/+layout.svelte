@@ -28,7 +28,7 @@
     const isHomePage = page.url.pathname === `/${lang}` || page.url.pathname === `/${lang}/`;
     const containerClass = isHomePage 
         ? "h-[100dvh] flex flex-col overflow-hidden" 
-        : "min-h-[100dvh] flex flex-col";
+        : "min-h-screen flex flex-col";
 </script>
 
 <svelte:head>
