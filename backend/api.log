@@ -1,0 +1,147 @@
+2026/04/04 20:10:09 FTS init warning: no such module: fts5
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /api/entries              --> backend/internal/handler.(*Handler).SearchEntries-fm (3 handlers)
+Server starting on port :8080
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8080
+Search received: 你好
+
+
+[31m2026/04/04 20:10:11 [Recovery] 2026/04/04 - 20:10:11 panic recovered:
+GET /api/entries?word=你好 HTTP/1.1
+Host: localhost:8080
+Accept: */*
+User-Agent: curl/8.7.1
+
+
+runtime error: invalid memory address or nil pointer dereference
+/usr/local/go/src/runtime/panic.go:262 (0x100468187)
+	panicmem: panic(memoryError)
+/usr/local/go/src/runtime/signal_unix.go:925 (0x100468158)
+	sigpanic: panicmem()
+/Users/yg_kovalev/development/dabkrs/backend/internal/search/search.go:204 (0x100614488)
+	scanEntries: result = append(result, *entryMap[id])
+/Users/yg_kovalev/development/dabkrs/backend/internal/search/search.go:114 (0x100613a9f)
+	(*Searcher).searchByHanzi: entries := scanEntries(s.db, rows)
+/Users/yg_kovalev/development/dabkrs/backend/internal/search/search.go:80 (0x10061387f)
+	(*Searcher).Search: return s.searchByHanzi(query)
+/Users/yg_kovalev/development/dabkrs/backend/internal/handler/handler.go:25 (0x1006e24b7)
+	(*Handler).SearchEntries: result, _ := h.svc.Search(query)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185 (0x1006dd837)
+	(*Context).Next: c.handlers[c.index](c)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/recovery.go:102 (0x1006dd820)
+	CustomRecoveryWithWriter.func1: c.Next()
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185 (0x1006dcbf3)
+	(*Context).Next: c.handlers[c.index](c)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/logger.go:249 (0x1006dcbd8)
+	LoggerWithConfig.func1: c.Next()
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185 (0x1006dc1a3)
+	(*Context).Next: c.handlers[c.index](c)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/gin.go:633 (0x1006dbce4)
+	(*Engine).handleHTTPRequest: c.Next()
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/gin.go:589 (0x1006dba73)
+	(*Engine).ServeHTTP: engine.handleHTTPRequest(c)
+/usr/local/go/src/net/http/server.go:3340 (0x1005e391f)
+	serverHandler.ServeHTTP: handler.ServeHTTP(rw, req)
+/usr/local/go/src/net/http/server.go:2109 (0x1005da367)
+	(*conn).serve: serverHandler{c.server}.ServeHTTP(w, w.req)
+/usr/local/go/src/runtime/asm_arm64.s:1268 (0x10046df33)
+	goexit: MOVD	R0, R0	// NOP
+[0m
+[GIN] 2026/04/04 - 20:10:11 | 500 |  399.910125ms |             ::1 | GET      "/api/entries?word=你好"
+Search received: 你好
+
+
+[31m2026/04/04 20:10:17 [Recovery] 2026/04/04 - 20:10:17 panic recovered:
+GET /api/entries?word=你好 HTTP/1.1
+Host: localhost:8080
+Accept: */*
+User-Agent: curl/8.7.1
+
+
+runtime error: invalid memory address or nil pointer dereference
+/usr/local/go/src/runtime/panic.go:262 (0x100468187)
+	panicmem: panic(memoryError)
+/usr/local/go/src/runtime/signal_unix.go:925 (0x100468158)
+	sigpanic: panicmem()
+/Users/yg_kovalev/development/dabkrs/backend/internal/search/search.go:204 (0x100614488)
+	scanEntries: result = append(result, *entryMap[id])
+/Users/yg_kovalev/development/dabkrs/backend/internal/search/search.go:114 (0x100613a9f)
+	(*Searcher).searchByHanzi: entries := scanEntries(s.db, rows)
+/Users/yg_kovalev/development/dabkrs/backend/internal/search/search.go:80 (0x10061387f)
+	(*Searcher).Search: return s.searchByHanzi(query)
+/Users/yg_kovalev/development/dabkrs/backend/internal/handler/handler.go:25 (0x1006e24b7)
+	(*Handler).SearchEntries: result, _ := h.svc.Search(query)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185 (0x1006dd837)
+	(*Context).Next: c.handlers[c.index](c)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/recovery.go:102 (0x1006dd820)
+	CustomRecoveryWithWriter.func1: c.Next()
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185 (0x1006dcbf3)
+	(*Context).Next: c.handlers[c.index](c)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/logger.go:249 (0x1006dcbd8)
+	LoggerWithConfig.func1: c.Next()
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185 (0x1006dc1a3)
+	(*Context).Next: c.handlers[c.index](c)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/gin.go:633 (0x1006dbce4)
+	(*Engine).handleHTTPRequest: c.Next()
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/gin.go:589 (0x1006dba73)
+	(*Engine).ServeHTTP: engine.handleHTTPRequest(c)
+/usr/local/go/src/net/http/server.go:3340 (0x1005e391f)
+	serverHandler.ServeHTTP: handler.ServeHTTP(rw, req)
+/usr/local/go/src/net/http/server.go:2109 (0x1005da367)
+	(*conn).serve: serverHandler{c.server}.ServeHTTP(w, w.req)
+/usr/local/go/src/runtime/asm_arm64.s:1268 (0x10046df33)
+	goexit: MOVD	R0, R0	// NOP
+[0m
+[GIN] 2026/04/04 - 20:10:17 | 500 |  403.573166ms |             ::1 | GET      "/api/entries?word=你好"
+Search received: 你好
+
+
+[31m2026/04/04 20:10:28 [Recovery] 2026/04/04 - 20:10:28 panic recovered:
+GET /api/entries?word=你好 HTTP/1.1
+Host: localhost:8080
+Accept: */*
+User-Agent: curl/8.7.1
+
+
+runtime error: invalid memory address or nil pointer dereference
+/usr/local/go/src/runtime/panic.go:262 (0x100468187)
+	panicmem: panic(memoryError)
+/usr/local/go/src/runtime/signal_unix.go:925 (0x100468158)
+	sigpanic: panicmem()
+/Users/yg_kovalev/development/dabkrs/backend/internal/search/search.go:204 (0x100614488)
+	scanEntries: result = append(result, *entryMap[id])
+/Users/yg_kovalev/development/dabkrs/backend/internal/search/search.go:114 (0x100613a9f)
+	(*Searcher).searchByHanzi: entries := scanEntries(s.db, rows)
+/Users/yg_kovalev/development/dabkrs/backend/internal/search/search.go:80 (0x10061387f)
+	(*Searcher).Search: return s.searchByHanzi(query)
+/Users/yg_kovalev/development/dabkrs/backend/internal/handler/handler.go:25 (0x1006e24b7)
+	(*Handler).SearchEntries: result, _ := h.svc.Search(query)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185 (0x1006dd837)
+	(*Context).Next: c.handlers[c.index](c)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/recovery.go:102 (0x1006dd820)
+	CustomRecoveryWithWriter.func1: c.Next()
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185 (0x1006dcbf3)
+	(*Context).Next: c.handlers[c.index](c)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/logger.go:249 (0x1006dcbd8)
+	LoggerWithConfig.func1: c.Next()
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185 (0x1006dc1a3)
+	(*Context).Next: c.handlers[c.index](c)
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/gin.go:633 (0x1006dbce4)
+	(*Engine).handleHTTPRequest: c.Next()
+/Users/yg_kovalev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/gin.go:589 (0x1006dba73)
+	(*Engine).ServeHTTP: engine.handleHTTPRequest(c)
+/usr/local/go/src/net/http/server.go:3340 (0x1005e391f)
+	serverHandler.ServeHTTP: handler.ServeHTTP(rw, req)
+/usr/local/go/src/net/http/server.go:2109 (0x1005da367)
+	(*conn).serve: serverHandler{c.server}.ServeHTTP(w, w.req)
+/usr/local/go/src/runtime/asm_arm64.s:1268 (0x10046df33)
+	goexit: MOVD	R0, R0	// NOP
+[0m
+[GIN] 2026/04/04 - 20:10:28 | 500 |  412.279083ms |             ::1 | GET      "/api/entries?word=你好"

@@ -58,7 +58,6 @@
 html, body {
   margin: 0;
   height: 100%;
-  overscroll-behavior: none;
   overflow-x: hidden;
 }
 
@@ -124,4 +123,13 @@ a, button, input, select, textarea {
 
 .pulse-subtle {
     animation: pulse-subtle 2s infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
 }

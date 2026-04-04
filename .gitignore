@@ -1,2 +1,5 @@
 /db
 /hint.txt
+/backend/dictionary.db
+/backend/dictionary.db-shm
+/backend/dictionary.db-wal

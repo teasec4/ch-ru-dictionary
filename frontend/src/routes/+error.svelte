@@ -3,7 +3,13 @@
     import { Home, ArrowLeft } from "lucide-svelte";
 
     let { data } = $props();
-    const translations = data.translations;
+    
+    const translations = data?.translations || {
+        pageNotFound: "Страница не найдена",
+        pageNotFoundDesc: "Извините, запрашиваемая страница не существует.",
+        home: "На главную",
+        back: "Назад"
+    };
     
     let error = $derived(page.error);
 </script>

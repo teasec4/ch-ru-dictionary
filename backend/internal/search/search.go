@@ -1,88 +1,221 @@
 package search
 
 import (
-	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/jmoiron/sqlx"
 )
 
-func contains(slice []string, item string) bool {
-	for _, v := range slice {
-		if v == item {
-			return true
+type QueryType int
+
+const (
+	QueryTypeUnknown QueryType = iota
+	QueryTypeHanzi
+	QueryTypePinyin
+	QueryTypeMeaning
+)
+
+func detectQueryType(query string) QueryType {
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return QueryTypeUnknown
+	}
+
+	runes := []rune(query)
+	for _, r := range runes {
+		if unicode.Is(unicode.Han, r) {
+			return QueryTypeHanzi
 		}
 	}
-	return false
+
+	if strings.ContainsAny(query, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+		return QueryTypePinyin
+	}
+
+	return QueryTypeMeaning
 }
 
-// Search is the main entry point for all search queries
-// It determines the search type based on which parameter is provided:
-// - hanzi: Chinese characters search (exact match)
-// - pinyin: Pinyin search (prefix match)
-// - meaning: Russian meaning search (partial match)
-// The extended parameter adds prefix matches for hanzi searches
-func (s *Searcher) Search(hanzi, pinyin, meaning string, page, limit int, extended bool) (Result, error) {
-	if hanzi != "" {
-		entries := s.ByHanzi(hanzi, limit, extended)
-		return Result{Data: entries, Total: len(entries), Page: page, Limit: limit}, nil
-	}
-	if pinyin != "" {
-		entries, total := s.ByPinyin(pinyin, page, limit)
-		return Result{Data: entries, Total: total, Page: page, Limit: limit}, nil
-	}
-	if meaning != "" {
-		entries, total := s.ByMeaning(meaning, page, limit)
-		return Result{Data: entries, Total: total, Page: page, Limit: limit}, nil
-	}
-	return Result{Data: []Entry{}, Total: 0, Page: page, Limit: limit}, nil
+func normalizeQuery(query string) string {
+	query = strings.TrimSpace(query)
+	query = strings.ToLower(query)
+	query = strings.ReplaceAll(query, " ", "")
+	query = strings.ReplaceAll(query, "\u00A0", "")
+	query = removeDiacritics(query)
+	query = strings.ReplaceAll(query, "'", "")
+	return query
 }
 
-// scanEntries reads database rows and converts them to Entry structs
-// It also loads meanings for each entry
+func removeDiacritics(s string) string {
+	toneMarks := map[rune]rune{
+		'à': 'a', 'á': 'a', 'ǎ': 'a', 'ā': 'a',
+		'è': 'e', 'é': 'e', 'ě': 'e', 'ē': 'e',
+		'ì': 'i', 'í': 'i', 'ǐ': 'i', 'ī': 'i',
+		'ò': 'o', 'ó': 'o', 'ǒ': 'o', 'ō': 'o',
+		'ù': 'u', 'ú': 'u', 'ǔ': 'u', 'ū': 'u',
+		'ǜ': 'ü', 'ǚ': 'ü', 'ǘ': 'ü', 'ǖ': 'ü',
+	}
+
+	runes := []rune(s)
+	for i, r := range runes {
+		if replacement, ok := toneMarks[r]; ok {
+			runes[i] = replacement
+		}
+	}
+
+	return string(runes)
+}
+
+func (s *Searcher) Search(query string) (Result, error) {
+	query = strings.TrimSpace(query)
+	println("Search received:", query)
+	if query == "" {
+		return Result{Data: []Entry{}, Total: 0, Page: 1, Limit: 50}, nil
+	}
+
+	queryType := detectQueryType(query)
+
+	switch queryType {
+	case QueryTypeHanzi:
+		return s.searchByHanzi(query)
+	case QueryTypePinyin:
+		normalized := normalizeQuery(query)
+		return s.searchByPinyin(normalized)
+	case QueryTypeMeaning:
+		return s.searchByMeaning(query)
+	default:
+		return Result{Data: []Entry{}, Total: 0, Page: 1, Limit: 50}, nil
+	}
+}
+
+func (s *Searcher) searchByHanzi(query string) (Result, error) {
+	rows, err := s.db.Queryx(`
+		SELECT id, headword, pinyin, frequency FROM (
+			SELECT id, headword, pinyin, frequency, 1 as rank
+			FROM entries
+			WHERE headword = ?
+			UNION ALL
+			SELECT id, headword, pinyin, frequency, 2 as rank
+			FROM entries
+			WHERE headword LIKE ? || '%' AND headword != ?
+			UNION ALL
+			SELECT id, headword, pinyin, frequency, 3 as rank
+			FROM entries
+			WHERE headword LIKE '%' || ? || '%' AND headword NOT LIKE ? || '%' AND headword != ?
+		)
+		ORDER BY rank ASC, frequency DESC, LENGTH(headword) ASC
+		LIMIT 50`,
+		query, query, query, query, query, query)
+	if err != nil {
+		return Result{}, err
+	}
+	defer rows.Close()
+
+	entries := scanEntries(s.db, rows)
+	return Result{Data: entries, Total: len(entries), Page: 1, Limit: 50}, nil
+}
+
+func (s *Searcher) searchByPinyin(query string) (Result, error) {
+	rows, err := s.db.Queryx(`
+		SELECT id, headword, pinyin, frequency FROM (
+			SELECT id, headword, pinyin, frequency, 1 as rank
+			FROM entries
+			WHERE pinyin = ?
+			UNION ALL
+			SELECT id, headword, pinyin, frequency, 2 as rank
+			FROM entries
+			WHERE pinyin LIKE ? || '%' AND pinyin != ?
+			UNION ALL
+			SELECT id, headword, pinyin, frequency, 3 as rank
+			FROM entries
+			WHERE pinyin LIKE '%' || ? || '%' AND pinyin NOT LIKE ? || '%' AND pinyin != ?
+		)
+		ORDER BY rank ASC, frequency DESC, LENGTH(headword) ASC
+		LIMIT 50`,
+		query, query, query, query, query, query)
+	if err != nil {
+		return Result{}, err
+	}
+	defer rows.Close()
+
+	entries := scanEntries(s.db, rows)
+	return Result{Data: entries, Total: len(entries), Page: 1, Limit: 50}, nil
+}
+
+func (s *Searcher) searchByMeaning(query string) (Result, error) {
+	rows, err := s.db.Queryx(`
+		SELECT e.id, e.headword, e.pinyin, e.frequency, 1 as rank FROM entries e
+		JOIN meanings m ON e.id = m.entry_id
+		WHERE m.text = ? COLLATE NOCASE AND LENGTH(m.text) < 200
+		UNION ALL
+		SELECT e.id, e.headword, e.pinyin, e.frequency, 2 as rank FROM entries e
+		JOIN meanings m ON e.id = m.entry_id
+		WHERE m.text LIKE ? || '%' COLLATE NOCASE AND m.text != ? COLLATE NOCASE AND LENGTH(m.text) < 200
+		UNION ALL
+		SELECT e.id, e.headword, e.pinyin, e.frequency, 3 as rank FROM entries e
+		JOIN meanings m ON e.id = m.entry_id
+		WHERE m.text LIKE '%' || ? || '%' COLLATE NOCASE AND m.text NOT LIKE ? || '%' COLLATE NOCASE AND m.text != ? COLLATE NOCASE AND LENGTH(m.text) < 200
+		ORDER BY rank ASC, frequency DESC, LENGTH(headword) ASC
+		LIMIT 50`,
+		query, query, query, query, query, query)
+	if err != nil {
+		return Result{}, err
+	}
+	defer rows.Close()
+
+	entries := scanEntries(s.db, rows)
+	return Result{Data: entries, Total: len(entries), Page: 1, Limit: 50}, nil
+}
+
 func scanEntries(db *sqlx.DB, rows *sqlx.Rows) []Entry {
-	var entryIDs []int
-	entryMap := make(map[int]*Entry)
+	type rawEntry struct {
+		ID        int
+		Headword  string
+		Pinyin    string
+		Frequency int
+	}
 
-	// First pass: collect all entries
+	var rawEntries []rawEntry
 	for rows.Next() {
-		var e struct {
-			ID     int
-			Hanzi  string
-			Pinyin string
-		}
+		var e rawEntry
 		if err := rows.StructScan(&e); err != nil {
 			continue
 		}
-		entryMap[e.ID] = &Entry{Hanzi: e.Hanzi, Pinyin: e.Pinyin, Meanings: []Meaning{}}
+		rawEntries = append(rawEntries, e)
+	}
+
+	if len(rawEntries) == 0 {
+		return []Entry{}
+	}
+
+	entryIDs := make([]int, 0, len(rawEntries))
+	entryMap := make(map[int]*Entry)
+	for _, e := range rawEntries {
+		entryMap[e.ID] = &Entry{Hanzi: e.Headword, Pinyin: e.Pinyin, Meanings: []Meaning{}}
 		entryIDs = append(entryIDs, e.ID)
 	}
 
-	// Load meanings for collected entries
 	if len(entryIDs) > 0 {
 		loadMeanings(db, entryIDs, entryMap)
 	}
 
-	// Convert map to slice
-	result := make([]Entry, 0, len(entryMap))
-	for _, e := range entryMap {
-		result = append(result, *e)
+	result := make([]Entry, 0, len(rawEntries))
+	for _, id := range entryIDs {
+		result = append(result, *entryMap[id])
 	}
+
 	return result
 }
 
-// loadMeanings fetches all meanings for the given entry IDs and populates the entry map
 func loadMeanings(db *sqlx.DB, entryIDs []int, entryMap map[int]*Entry) {
 	if len(entryIDs) == 0 {
 		return
 	}
 
-	// Build dynamic IN clause: WHERE entry_id IN (?, ?, ?, ...)
 	placeholders := strings.Repeat("?,", len(entryIDs))
 	placeholders = placeholders[:len(placeholders)-1]
 	query := `SELECT id, entry_id, order_num, text FROM meanings WHERE entry_id IN (` + placeholders + `) ORDER BY entry_id, order_num`
 
-	// Convert []int to []interface{} for sqlx
 	args := make([]interface{}, len(entryIDs))
 	for i, id := range entryIDs {
 		args[i] = id
@@ -90,14 +223,11 @@ func loadMeanings(db *sqlx.DB, entryIDs []int, entryMap map[int]*Entry) {
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
-		fmt.Printf("loadMeanings error: %v\n", err)
 		return
 	}
 	defer rows.Close()
 
-	// First pass: populate meanings
 	meaningIDs := make([]int, 0)
-	count := 0
 	for rows.Next() {
 		var m struct {
 			ID       int
@@ -106,23 +236,19 @@ func loadMeanings(db *sqlx.DB, entryIDs []int, entryMap map[int]*Entry) {
 			Text     string
 		}
 		if err := rows.Scan(&m.ID, &m.EntryID, &m.OrderNum, &m.Text); err != nil {
-			fmt.Printf("Scan error: %v\n", err)
 			continue
 		}
-		count++
 		if e, ok := entryMap[m.EntryID]; ok {
 			e.Meanings = append(e.Meanings, Meaning{ID: m.ID, Index: len(e.Meanings) + 1, Text: m.Text})
 			meaningIDs = append(meaningIDs, m.ID)
 		}
 	}
 
-	// Second pass: load refs for collected meanings
 	if len(meaningIDs) > 0 {
 		loadRefs(db, meaningIDs, entryMap)
 	}
 }
 
-// loadRefs fetches refs for the given meaning IDs and populates the entry map
 func loadRefs(db *sqlx.DB, meaningIDs []int, entryMap map[int]*Entry) {
 	if len(meaningIDs) == 0 {
 		return
@@ -130,7 +256,8 @@ func loadRefs(db *sqlx.DB, meaningIDs []int, entryMap map[int]*Entry) {
 
 	placeholders := strings.Repeat("?,", len(meaningIDs))
 	placeholders = placeholders[:len(placeholders)-1]
-	query := `SELECT r.meaning_id, COALESCE(r.target_hanzi, e.hanzi) as ref_hanzi 
+
+	query := `SELECT r.meaning_id, COALESCE(r.target_hanzi, e.headword) as ref_hanzi 
 		FROM refs r 
 		LEFT JOIN entries e ON r.target_entry_id = e.id 
 		WHERE r.meaning_id IN (` + placeholders + `)`
@@ -142,12 +269,10 @@ func loadRefs(db *sqlx.DB, meaningIDs []int, entryMap map[int]*Entry) {
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
-		fmt.Printf("loadRefs error: %v\n", err)
 		return
 	}
 	defer rows.Close()
 
-	// Group refs by meaning_id
 	refsByMeaning := make(map[int][]string)
 	for rows.Next() {
 		var meaningID int
@@ -160,7 +285,6 @@ func loadRefs(db *sqlx.DB, meaningIDs []int, entryMap map[int]*Entry) {
 		}
 	}
 
-	// Attach refs to meanings
 	for _, e := range entryMap {
 		for i := range e.Meanings {
 			meaningID := e.Meanings[i].ID

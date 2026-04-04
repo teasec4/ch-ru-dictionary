@@ -3,33 +3,20 @@
     import { navigating } from "$app/stores";
     import { Loader2 } from "lucide-svelte";
     import { page } from "$app/state";
-    import ExtendedSearch from "$lib/components/ExtendedSearch.svelte";
-
     let { data } = $props();
     const translations = data.translations;
 
     let searchTerm = $state("");
     let error = $state<string | null>(null);
-    let showExtended = $state(false);
-    let extendedLoading = $state(false);
 
-    // Используем $navigating для отслеживания загрузки
-    let pageLoading = $derived($navigating !== null);
-
-    // Убираем extended из основной страницы
 
     async function handleSearch() {
+        console.log('handleSearch called', searchTerm, $navigating);
         const lang = page.params.lang;
-        if (!searchTerm.trim() || pageLoading) return;
+        if (!searchTerm.trim() || !!$navigating) return;
 
         error = null;
-
-        try {
-            goto(`/${lang}/search/${encodeURIComponent(searchTerm.trim())}`);
-        } catch (err) {
-            error = err instanceof Error ? err.message : translations.error;
-            console.error("Navigation error:", err);
-        }
+        goto(`/${lang}/search/${encodeURIComponent(searchTerm.trim())}`);
     }
 
     function handleKeyPress(event: KeyboardEvent) {
@@ -52,7 +39,7 @@
                     bind:value={searchTerm}
                     onkeydown={handleKeyPress}
                     class="w-full px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg rounded-xl border border-dict-3 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none shadow-sm transition"
-                    disabled={pageLoading}
+                    disabled={!!$navigating}
                 />
                 {#if searchTerm.trim()}
                     <button
@@ -65,11 +52,11 @@
                 {/if}
             </div>
             <button
-                disabled={!searchTerm.trim() || pageLoading}
+                disabled={!searchTerm.trim() || !!$navigating}
                 class="px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-primary text-white font-semibold hover:bg-dict-1 active:scale-95 disabled:opacity-50 transition flex items-center justify-center gap-2"
                 onclick={handleSearch}
             >
-                {#if pageLoading}
+                {#if !!$navigating}
                     <Loader2 class="w-5 h-5 animate-spin" />
                 {:else}
                     {translations.find}
@@ -92,7 +79,7 @@
 
     <!-- Results -->
     <div class="max-w-6xl mx-auto pb-12 p-4 pt-20">
-        {#if !pageLoading && data}
+        {#if !!!$navigating && data}
 
             {#if data.data.count > 0}
                 <div class="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -162,8 +149,7 @@
                 </div>
             {/if}
 
-            <ExtendedSearch word={page.params.word} {translations} />
-        {:else if pageLoading}
+        {:else if !!$navigating}
             <div class="text-center py-16">
                 <Loader2 class="w-10 h-10 animate-spin mx-auto mb-4 text-accent" />
                 <p class="text-dict-2">{translations.loading}...</p>
