@@ -2,7 +2,9 @@ package search
 
 import "github.com/jmoiron/sqlx"
 
+// added an id for consistnecy with DB 
 type Entry struct {
+	ID int 				`json:"id"`
 	Hanzi    string    `json:"hanzi"`
 	Pinyin   string    `json:"pinyin,omitempty"`
 	Meanings []Meaning `json:"meanings"`

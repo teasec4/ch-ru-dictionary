@@ -26,7 +26,3 @@ func (h *Handler) SearchEntries(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
-
-func detectSearchType(word string) (hanzi, pinyin, meaning string) {
-	return word, "", ""
-}

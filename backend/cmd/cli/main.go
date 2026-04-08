@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/internal/search"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,7 +16,7 @@ func main() {
 	}
 
 	query := os.Args[1]
-	url := "http://localhost:8080/api/entries?hanzi=" + query + "&limit=5"
+	url := "http://localhost:8080/api/entries?word=" + query
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -26,20 +27,22 @@ func main() {
 
 	body, _ := io.ReadAll(resp.Body)
 
-	var result map[string]interface{}
+	
+	var result search.Result
 	json.Unmarshal(body, &result)
+	
+	data := result.Data
 
-	data := result["data"].([]interface{})
+	
 	fmt.Printf("Found %d results:\n\n", len(data))
 
 	for i, entry := range data {
-		e := entry.(map[string]interface{})
-		fmt.Printf("%d. %s [%s]\n", i+1, e["hanzi"], e["pinyin"])
+		
+		fmt.Printf("%d. %s [%s]\n", i+1, entry.Hanzi, entry.Pinyin)
 
-		meanings := e["meanings"].([]interface{})
+		meanings := entry.Meanings
 		for _, m := range meanings {
-			meaning := m.(map[string]interface{})
-			fmt.Printf("   %d. %s\n", int(meaning["index"].(float64)), meaning["text"])
+			fmt.Printf("   %d. %s\n", int(m.Index), m.Text)
 		}
 		fmt.Println()
 	}

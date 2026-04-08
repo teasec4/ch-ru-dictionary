@@ -1,6 +1,7 @@
 package search
 
 import (
+	"sort"
 	"strings"
 	"unicode"
 
@@ -68,7 +69,6 @@ func removeDiacritics(s string) string {
 
 func (s *Searcher) Search(query string) (Result, error) {
 	query = strings.TrimSpace(query)
-	println("Search received:", query)
 	if query == "" {
 		return Result{Data: []Entry{}, Total: 0, Page: 1, Limit: 50}, nil
 	}
@@ -88,51 +88,57 @@ func (s *Searcher) Search(query string) (Result, error) {
 	}
 }
 
-func (s *Searcher) searchByHanzi(query string) (Result, error) {
-	rows, err := s.db.Queryx(`
-		SELECT id, headword, pinyin, frequency FROM (
-			SELECT id, headword, pinyin, frequency, 1 as rank
-			FROM entries
-			WHERE headword = ?
-			UNION ALL
-			SELECT id, headword, pinyin, frequency, 2 as rank
-			FROM entries
-			WHERE headword LIKE ? || '%' AND headword != ?
-			UNION ALL
-			SELECT id, headword, pinyin, frequency, 3 as rank
-			FROM entries
-			WHERE headword LIKE '%' || ? || '%' AND headword NOT LIKE ? || '%' AND headword != ?
-		)
-		ORDER BY rank ASC, frequency DESC, LENGTH(headword) ASC
-		LIMIT 50`,
-		query, query, query, query, query, query)
-	if err != nil {
-		return Result{}, err
-	}
-	defer rows.Close()
+// func (s *Searcher) searchByHanzi(query string) (Result, error) {
+// 	rows, err := s.db.Queryx(`
+// 		SELECT id, headword, pinyin, frequency, rank FROM (
+// 			SELECT id, headword, pinyin, frequency, 1 as rank
+// 			FROM entries
+// 			WHERE headword = ?
+// 			UNION ALL
+// 			SELECT id, headword, pinyin, frequency, 2 as rank
+// 			FROM entries
+// 			WHERE headword LIKE ? || '%' AND headword != ?
+// 			UNION ALL
+// 			SELECT id, headword, pinyin, frequency, 3 as rank
+// 			FROM entries
+// 			WHERE headword LIKE '%' || ? || '%'
+// 			  AND headword NOT LIKE ? || '%'
+// 			  AND headword != ?
+// 			  AND LENGTH(headword) <= LENGTH(?) + 3
+// 		)
+// 		ORDER BY rank ASC, LENGTH(headword) ASC, frequency DESC
+// 		LIMIT 50`,
+// 		query, query, query, query, query, query, query)
+// 	if err != nil {
+// 		return Result{}, err
+// 	}
+// 	defer rows.Close()
 
-	entries := scanEntries(s.db, rows)
-	return Result{Data: entries, Total: len(entries), Page: 1, Limit: 50}, nil
-}
+// 	entries := scanEntries(s.db, rows)
+// 	return Result{Data: entries, Total: len(entries), Page: 1, Limit: 50}, nil
+// }
 
 func (s *Searcher) searchByPinyin(query string) (Result, error) {
 	rows, err := s.db.Queryx(`
-		SELECT id, headword, pinyin, frequency FROM (
+		SELECT id, headword, pinyin, frequency, rank FROM (
 			SELECT id, headword, pinyin, frequency, 1 as rank
 			FROM entries
-			WHERE pinyin = ?
+			WHERE pinyin_normalized = ?
 			UNION ALL
 			SELECT id, headword, pinyin, frequency, 2 as rank
 			FROM entries
-			WHERE pinyin LIKE ? || '%' AND pinyin != ?
+			WHERE pinyin_normalized LIKE ? || '%' AND pinyin_normalized != ?
 			UNION ALL
 			SELECT id, headword, pinyin, frequency, 3 as rank
 			FROM entries
-			WHERE pinyin LIKE '%' || ? || '%' AND pinyin NOT LIKE ? || '%' AND pinyin != ?
+			WHERE pinyin_normalized LIKE '%' || ? || '%'
+			  AND pinyin_normalized NOT LIKE ? || '%'
+			  AND pinyin_normalized != ?
+			  AND LENGTH(headword) <= LENGTH(?) + 3
 		)
-		ORDER BY rank ASC, frequency DESC, LENGTH(headword) ASC
+		ORDER BY rank ASC, LENGTH(headword) ASC, frequency DESC
 		LIMIT 50`,
-		query, query, query, query, query, query)
+		query, query, query, query, query, query, query)
 	if err != nil {
 		return Result{}, err
 	}
@@ -143,28 +149,40 @@ func (s *Searcher) searchByPinyin(query string) (Result, error) {
 }
 
 func (s *Searcher) searchByMeaning(query string) (Result, error) {
-	rows, err := s.db.Queryx(`
-		SELECT e.id, e.headword, e.pinyin, e.frequency, 1 as rank FROM entries e
-		JOIN meanings m ON e.id = m.entry_id
-		WHERE m.text = ? COLLATE NOCASE AND LENGTH(m.text) < 200
-		UNION ALL
-		SELECT e.id, e.headword, e.pinyin, e.frequency, 2 as rank FROM entries e
-		JOIN meanings m ON e.id = m.entry_id
-		WHERE m.text LIKE ? || '%' COLLATE NOCASE AND m.text != ? COLLATE NOCASE AND LENGTH(m.text) < 200
-		UNION ALL
-		SELECT e.id, e.headword, e.pinyin, e.frequency, 3 as rank FROM entries e
-		JOIN meanings m ON e.id = m.entry_id
-		WHERE m.text LIKE '%' || ? || '%' COLLATE NOCASE AND m.text NOT LIKE ? || '%' COLLATE NOCASE AND m.text != ? COLLATE NOCASE AND LENGTH(m.text) < 200
-		ORDER BY rank ASC, frequency DESC, LENGTH(headword) ASC
-		LIMIT 50`,
-		query, query, query, query, query, query)
-	if err != nil {
-		return Result{}, err
-	}
-	defer rows.Close()
+    // Нормализуем запрос для поиска (нижний регистр + убираем лишние пробелы)
+    normalized := strings.ToLower(strings.TrimSpace(query))
 
-	entries := scanEntries(s.db, rows)
-	return Result{Data: entries, Total: len(entries), Page: 1, Limit: 50}, nil
+    rows, err := s.db.Queryx(`
+SELECT id, headword, pinyin, frequency, rank FROM (
+    -- Точное совпадение целого слова (самый высокий приоритет)
+    SELECT e.id, e.headword, e.pinyin, e.frequency, 1 as rank
+    FROM entries e
+    JOIN meanings m ON e.id = m.entry_id
+    WHERE 
+        (',' || LOWER(m.text) || ',') LIKE '%,' || ? || ',%' 
+        OR LOWER(m.text) = ?
+
+    UNION ALL
+
+    -- Содержит слово (с приоритетом 2)
+    SELECT e.id, e.headword, e.pinyin, e.frequency, 2 as rank
+    FROM entries e
+    JOIN meanings m ON e.id = m.entry_id
+    WHERE LOWER(m.text) LIKE '%' || ? || '%'
+      AND NOT (',' || LOWER(m.text) || ',') LIKE '%,' || ? || ',%'
+      AND LOWER(m.text) != ?
+)
+ORDER BY rank ASC, LENGTH(headword) ASC, frequency DESC
+LIMIT 50
+`, normalized, normalized, normalized, normalized, normalized)
+
+    if err != nil {
+        return Result{}, err
+    }
+    defer rows.Close()
+
+    entries := scanEntries(s.db, rows)
+    return Result{Data: entries, Total: len(entries), Page: 1, Limit: 50}, nil
 }
 
 func scanEntries(db *sqlx.DB, rows *sqlx.Rows) []Entry {
@@ -173,6 +191,7 @@ func scanEntries(db *sqlx.DB, rows *sqlx.Rows) []Entry {
 		Headword  string
 		Pinyin    string
 		Frequency int
+		Rank      int
 	}
 
 	var rawEntries []rawEntry
@@ -184,22 +203,38 @@ func scanEntries(db *sqlx.DB, rows *sqlx.Rows) []Entry {
 		rawEntries = append(rawEntries, e)
 	}
 
+	if err := rows.Err(); err != nil {
+		return []Entry{}
+	}
+
 	if len(rawEntries) == 0 {
 		return []Entry{}
 	}
 
+	sort.Slice(rawEntries, func(i, j int) bool {
+		if rawEntries[i].Rank != rawEntries[j].Rank {
+			return rawEntries[i].Rank < rawEntries[j].Rank
+		}
+		if len(rawEntries[i].Headword) != len(rawEntries[j].Headword) {
+			return len(rawEntries[i].Headword) < len(rawEntries[j].Headword)
+		}
+		return rawEntries[i].Frequency > rawEntries[j].Frequency
+	})
+
 	entryIDs := make([]int, 0, len(rawEntries))
 	entryMap := make(map[int]*Entry)
 	for _, e := range rawEntries {
+		if _, exists := entryMap[e.ID]; !exists {
+			entryIDs = append(entryIDs, e.ID)
+		}
 		entryMap[e.ID] = &Entry{Hanzi: e.Headword, Pinyin: e.Pinyin, Meanings: []Meaning{}}
-		entryIDs = append(entryIDs, e.ID)
 	}
 
 	if len(entryIDs) > 0 {
 		loadMeanings(db, entryIDs, entryMap)
 	}
 
-	result := make([]Entry, 0, len(rawEntries))
+	result := make([]Entry, 0, len(entryIDs))
 	for _, id := range entryIDs {
 		result = append(result, *entryMap[id])
 	}
