@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import { navigating } from "$app/stores";
     import { page } from "$app/state";
     import { Search, Bookmark, Sparkles, Loader2 } from "lucide-svelte";
     
@@ -7,7 +8,6 @@
     const translations = data.translations;
 
     let searchTerm = $state("");
-    let loading = $state(false);
 
     function handleKeyPress(event: KeyboardEvent) {
         if (event.key === "Enter") {
@@ -15,17 +15,9 @@
         }
     }
 
-    async function handleSearch() {
-        if (!searchTerm.trim() || loading) return;
-        
-        const lang = page.params.lang;
-        loading = true;
-        
-        try {
-            await goto(`/${lang}/search/${searchTerm}`);
-        } finally {
-            loading = false;
-        }
+    function handleSearch() {
+        if (!searchTerm.trim()) return;
+        goto(`/${page.params.lang}/search/${searchTerm}`);
     }
 </script>
 
@@ -53,11 +45,15 @@
                 />
 
                 <button
-                    class="absolute right-2 top-1/2 -translate-y-1/2 px-4 sm:px-8 rounded-xl bg-primary hover:bg-dict-1 text-white font-semibold py-2.5 active:scale-95 disabled:opacity-50 transition"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 px-4 sm:px-8 rounded-xl bg-primary hover:bg-dict-1 text-white font-semibold py-2.5 active:scale-95 disabled:opacity-50 transition flex items-center justify-center gap-2 min-w-[100px]"
                     onclick={handleSearch}
-                    disabled={!searchTerm.trim()}
+                    disabled={!searchTerm.trim() || !!$navigating}
                 >
-                    {translations.searchButton}
+                    {#if !!$navigating}
+                        <Loader2 class="w-5 h-5 animate-spin" />
+                    {:else}
+                        {translations.searchButton}
+                    {/if}
                 </button>
             </div>
         </div>
@@ -85,4 +81,12 @@
 
 <style lang="postcss">
     @reference "tailwindcss";
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
 </style>

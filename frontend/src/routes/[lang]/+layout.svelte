@@ -1,7 +1,8 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { page } from "$app/state";
+    import { navigating, page } from "$app/state";
     import LanguageToggle from "$lib/components/LanguageToggle.svelte";
+    import { Loader2 } from "lucide-svelte";
     let { children, data } = $props();
     import "../../app.css";
 
@@ -33,6 +34,15 @@
     <title>{translations.siteTitle}</title>
     <meta name="description" content={translations.metaDescription} />
 </svelte:head>
+
+<!-- {#if navigating.to}
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="flex flex-col items-center gap-3">
+            <Loader2 class="w-10 h-10 animate-spin text-white" />
+            <p class="text-white text-lg">Поиск...</p>
+        </div>
+    </div>
+{/if} -->
 
 <div class={containerClass} onclick={() => menuOpen && closeMenu()}>
     <!-- NAVBAR -->
